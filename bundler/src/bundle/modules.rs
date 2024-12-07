@@ -1,6 +1,6 @@
 use std::{collections::HashMap, env, path::Path};
 
-use crate::{
+use super::loaders::{
     CoreModuleLoader, FsModuleLoader, ModuleLoader, ModulePath, ModuleSource, UrlModuleLoader,
 };
 use anyhow::Result;

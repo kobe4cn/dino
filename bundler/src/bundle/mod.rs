@@ -1,9 +1,14 @@
-use crate::modules::load_import;
-use crate::modules::resolve_import;
-use crate::modules::ImportMap;
-use crate::modules::CORE_MODULES;
+mod errors;
+mod loaders;
+mod modules;
+mod transpilers;
 use anyhow::Error;
 use anyhow::Result;
+
+use modules::load_import;
+use modules::resolve_import;
+use modules::ImportMap;
+pub use modules::CORE_MODULES;
 use std::collections::HashMap;
 
 use std::path::Path;
