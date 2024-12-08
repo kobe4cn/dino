@@ -13,6 +13,7 @@ use crate::BUILD_DIR;
 pub(crate) fn get_files_with_extension(dir: &str, ext: &[&str]) -> Result<BTreeSet<PathBuf>> {
     let mut files = BTreeSet::new();
     for ex in ext {
+        //using glob crate to get all files with certain extension in a directory
         let ts_glob = format!("{}/**/*{}", dir, ex);
         for entry in glob(&ts_glob)? {
             let path = entry?;

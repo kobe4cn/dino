@@ -12,6 +12,7 @@ fn print(msg: String) {
 }
 impl JsEngine {
     pub fn new(module: &str) -> Result<Self> {
+        //using rquickjs for set js global object and run js code
         let rt = Runtime::new()?;
         let ctx = Context::full(&rt)?;
 
