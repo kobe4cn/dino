@@ -1,0 +1,9 @@
+async function hello(req:Request):Response{
+    return new Response("Hello World",{
+        headers:{
+            "content-type":"text/plain"
+        },
+    });
+}
+
+export { hello };

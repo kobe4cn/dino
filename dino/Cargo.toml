@@ -1,0 +1,30 @@
+[package]
+name = "dino"
+version = "0.1.0"
+edition = "2021"
+license = "MIT"
+
+[dependencies]
+anyhow = "1.0.94"
+askama = { version = "0.12.1", features = ["serde", "serde-yaml"] }
+blake3 = "1.5.5"
+bundler = { workspace = true }
+clap = { version = "4.5.23", features = ["derive"] }
+dialoguer = { version = "0.11.0", features = [
+    "completion",
+    "fuzzy-matcher",
+    "fuzzy-select",
+    "history",
+] }
+enum_dispatch = "0.3.13"
+git2 = { version = "0.19.0", default-features = false }
+glob = "0.3.1"
+rquickjs = { version = "0.8.1", features = ["full"] }
+rquickjs-macro = "0.8.1"
+tokio = { version = "1.42.0", features = [
+    "rt",
+    "rt-multi-thread",
+    "net",
+    "macros",
+    "io-util",
+] }
