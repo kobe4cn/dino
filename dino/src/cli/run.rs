@@ -2,7 +2,7 @@ use std::{collections::HashMap, fs};
 
 use clap::Parser;
 
-use crate::{build_project, CmdExcetor, JsEngine, Request};
+use crate::{build_project, CmdExcetor, JsEngine, Req};
 
 #[derive(Debug, Parser)]
 
@@ -13,7 +13,7 @@ impl CmdExcetor for RunOpts {
         let filename = build_project(".")?;
         let content = fs::read_to_string(&filename)?;
         let worker = JsEngine::new(&content)?;
-        let req = Request::builder()
+        let req = Req::builder()
             .method("GET")
             .headers(HashMap::new())
             .url("http://localhost:8080")

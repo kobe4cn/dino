@@ -2,7 +2,8 @@ use std::collections::HashMap;
 
 use anyhow::Result;
 
-use rquickjs::{Context, Ctx, FromJs, Function, IntoJs, Object, Promise, Runtime};
+use dino_macros::{FromJs, IntoJs};
+use rquickjs::{Context, Function, Object, Promise, Runtime};
 use typed_builder::TypedBuilder;
 
 #[allow(unused)]
@@ -14,8 +15,8 @@ fn print(msg: String) {
     println!("{msg}");
 }
 
-#[derive(Debug, TypedBuilder)]
-pub struct Request {
+#[derive(Debug, TypedBuilder, IntoJs)]
+pub struct Req {
     pub headers: HashMap<String, String>,
     #[builder(default, setter(strip_option))]
     pub body: Option<String>,
@@ -25,37 +26,37 @@ pub struct Request {
     pub url: String,
 }
 
-#[derive(Debug)]
-pub struct Response {
+#[derive(Debug, FromJs)]
+pub struct Res {
     pub headers: HashMap<String, String>,
     pub body: Option<String>,
     pub status: u16,
 }
 
-impl<'js> IntoJs<'js> for Request {
-    fn into_js(self, ctx: &Ctx<'js>) -> rquickjs::Result<rquickjs::Value<'js>> {
-        let obj = Object::new(ctx.clone())?;
-        obj.set("headers", self.headers)?;
-        obj.set("body", self.body)?;
-        obj.set("method", self.method)?;
-        obj.set("url", self.url)?;
-        Ok(obj.into_value())
-    }
-}
+// impl<'js> IntoJs<'js> for Request {
+//     fn into_js(self, ctx: &Ctx<'js>) -> rquickjs::Result<rquickjs::Value<'js>> {
+//         let obj = Object::new(ctx.clone())?;
+//         obj.set("headers", self.headers)?;
+//         obj.set("body", self.body)?;
+//         obj.set("method", self.method)?;
+//         obj.set("url", self.url)?;
+//         Ok(obj.into_value())
+//     }
+// }
 
-impl<'js> FromJs<'js> for Response {
-    fn from_js(_ctx: &Ctx<'js>, value: rquickjs::Value<'js>) -> rquickjs::Result<Self> {
-        let obj = value.into_object().unwrap();
-        let headers = obj.get::<_, HashMap<String, String>>("headers")?;
-        let body = obj.get::<_, Option<String>>("body")?;
-        let status = obj.get::<_, u16>("status")?;
-        Ok(Self {
-            headers,
-            body,
-            status,
-        })
-    }
-}
+// impl<'js> FromJs<'js> for Response {
+//     fn from_js(_ctx: &Ctx<'js>, value: rquickjs::Value<'js>) -> rquickjs::Result<Self> {
+//         let obj = value.into_object().unwrap();
+//         let headers = obj.get::<_, HashMap<String, String>>("headers")?;
+//         let body = obj.get::<_, Option<String>>("body")?;
+//         let status = obj.get::<_, u16>("status")?;
+//         Ok(Self {
+//             headers,
+//             body,
+//             status,
+//         })
+//     }
+// }
 
 impl JsEngine {
     pub fn new(module: &str) -> Result<Self> {
@@ -76,7 +77,7 @@ impl JsEngine {
 
         Ok(Self { rt, ctx })
     }
-    pub fn run(&self, name: &str, req: Request) -> Result<Response> {
+    pub fn run(&self, name: &str, req: Req) -> Result<Res> {
         self.ctx.with(|ctx| {
             let global = ctx.globals();
             let handlers = global.get::<_, Object>("handlers")?;
@@ -112,7 +113,7 @@ mod tests {
                 return{hello:hello};})();
         "#,
         )?;
-        let req = Request::builder()
+        let req = Req::builder()
             .method("GET")
             .url("http://localhost:8080")
             .headers(HashMap::new())

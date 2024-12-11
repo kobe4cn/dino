@@ -29,3 +29,4 @@ tokio = { version = "1.42.0", features = [
     "io-util",
 ] }
 typed-builder = "0.20.0"
+dino-macros = { workspace = true }
