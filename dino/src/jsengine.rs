@@ -1,6 +1,9 @@
+use std::collections::HashMap;
+
 use anyhow::Result;
 
-use rquickjs::{Context, Function, Object, Runtime};
+use rquickjs::{Context, Ctx, FromJs, Function, IntoJs, Object, Promise, Runtime};
+use typed_builder::TypedBuilder;
 
 #[allow(unused)]
 pub struct JsEngine {
@@ -10,6 +13,50 @@ pub struct JsEngine {
 fn print(msg: String) {
     println!("{msg}");
 }
+
+#[derive(Debug, TypedBuilder)]
+pub struct Request {
+    pub headers: HashMap<String, String>,
+    #[builder(default, setter(strip_option))]
+    pub body: Option<String>,
+    #[builder(setter(into))]
+    pub method: String,
+    #[builder(setter(into))]
+    pub url: String,
+}
+
+#[derive(Debug)]
+pub struct Response {
+    pub headers: HashMap<String, String>,
+    pub body: Option<String>,
+    pub status: u16,
+}
+
+impl<'js> IntoJs<'js> for Request {
+    fn into_js(self, ctx: &Ctx<'js>) -> rquickjs::Result<rquickjs::Value<'js>> {
+        let obj = Object::new(ctx.clone())?;
+        obj.set("headers", self.headers)?;
+        obj.set("body", self.body)?;
+        obj.set("method", self.method)?;
+        obj.set("url", self.url)?;
+        Ok(obj.into_value())
+    }
+}
+
+impl<'js> FromJs<'js> for Response {
+    fn from_js(_ctx: &Ctx<'js>, value: rquickjs::Value<'js>) -> rquickjs::Result<Self> {
+        let obj = value.into_object().unwrap();
+        let headers = obj.get::<_, HashMap<String, String>>("headers")?;
+        let body = obj.get::<_, Option<String>>("body")?;
+        let status = obj.get::<_, u16>("status")?;
+        Ok(Self {
+            headers,
+            body,
+            status,
+        })
+    }
+}
+
 impl JsEngine {
     pub fn new(module: &str) -> Result<Self> {
         //using rquickjs for set js global object and run js code
@@ -29,15 +76,15 @@ impl JsEngine {
 
         Ok(Self { rt, ctx })
     }
-    pub fn run(&self, code: &str) -> Result<()> {
+    pub fn run(&self, name: &str, req: Request) -> Result<Response> {
         self.ctx.with(|ctx| {
-            let _: () = ctx.eval_promise(code)?.finish()?;
-            // let print = ctx.globals().get::<_, Function>("print")?;
-            // print.call::<_, ()>(result)?;
-            // println!("==================={:?}", result);
-            Ok::<_, anyhow::Error>(())
-        })?;
-        Ok(())
+            let global = ctx.globals();
+            let handlers = global.get::<_, Object>("handlers")?;
+            let function = handlers.get::<_, Function>(name)?;
+            let result: Promise = function.call((req,))?;
+
+            Ok::<_, anyhow::Error>(result.finish()?)
+        })
     }
 }
 
@@ -50,10 +97,28 @@ mod tests {
     fn test_js_engine() -> Result<()> {
         let engine = JsEngine::new(
             r#"
-            (function(){async function hello(){print("hello world");return"hello";}return{hello:hello};})();
+            (function(){
+                async function hello(req){
+                print("hello world");
+                return{
+                status:200,
+                headers:{
+
+                "content-type":"application/json"
+                },
+                body:JSON.stringify(req),
+                };
+                }
+                return{hello:hello};})();
         "#,
         )?;
-        engine.run("await handlers.hello()")?;
+        let req = Request::builder()
+            .method("GET")
+            .url("http://localhost:8080")
+            .headers(HashMap::new())
+            .build();
+        let ret = engine.run("hello", req)?;
+        assert_eq!(ret.status, 200);
         Ok(())
     }
 }

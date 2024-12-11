@@ -1,8 +1,8 @@
-use std::fs;
+use std::{collections::HashMap, fs};
 
 use clap::Parser;
 
-use crate::{build_project, CmdExcetor, JsEngine};
+use crate::{build_project, CmdExcetor, JsEngine, Request};
 
 #[derive(Debug, Parser)]
 
@@ -13,9 +13,13 @@ impl CmdExcetor for RunOpts {
         let filename = build_project(".")?;
         let content = fs::read_to_string(&filename)?;
         let worker = JsEngine::new(&content)?;
-
-        worker.run("await handlers.hello()")?;
-
+        let req = Request::builder()
+            .method("GET")
+            .headers(HashMap::new())
+            .url("http://localhost:8080")
+            .build();
+        let ret = worker.run("hello", req)?;
+        println!("Response: {:?}", ret);
         Ok(())
     }
 }
