@@ -1,8 +1,9 @@
 mod config;
 mod error;
 mod router;
+use dashmap::DashMap;
 pub use error::*;
-use std::{collections::HashMap, sync::Arc};
+use std::collections::HashMap;
 use tracing::{info, level_filters::LevelFilter};
 use tracing_subscriber::{
     fmt::Layer, layer::SubscriberExt as _, util::SubscriberInitExt as _, Layer as _,
@@ -25,12 +26,9 @@ pub type ProjectRouters = IndexMap<String, Vec<ProjectRoute>>;
 #[derive(Clone)]
 pub struct AppState {
     //key is host name
-    router: Arc<HashMap<String, SwappableAppRouter>>,
+    router: DashMap<String, SwappableAppRouter>,
 }
-pub async fn start_server(
-    port: u16,
-    router: Arc<HashMap<String, SwappableAppRouter>>,
-) -> Result<()> {
+pub async fn start_server(port: u16, router: DashMap<String, SwappableAppRouter>) -> Result<()> {
     let layer = Layer::new().pretty().with_filter(LevelFilter::INFO);
     tracing_subscriber::registry().with(layer).init();
 
@@ -93,7 +91,7 @@ async fn handler(
 }
 
 impl AppState {
-    pub fn new(router: Arc<HashMap<String, SwappableAppRouter>>) -> Self {
+    pub fn new(router: DashMap<String, SwappableAppRouter>) -> Self {
         Self { router }
     }
 }
