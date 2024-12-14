@@ -21,12 +21,6 @@ git2 = { version = "0.19.0", default-features = false }
 glob = "0.3.1"
 rquickjs = { version = "0.8.1", features = ["full"] }
 rquickjs-macro = "0.8.1"
-tokio = { version = "1.42.0", features = [
-    "rt",
-    "rt-multi-thread",
-    "net",
-    "macros",
-    "io-util",
-] }
+tokio={workspace = true}
 typed-builder = "0.20.0"
 dino-macros = { workspace = true }
