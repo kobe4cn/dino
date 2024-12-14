@@ -19,8 +19,9 @@ dialoguer = { version = "0.11.0", features = [
 enum_dispatch = "0.3.13"
 git2 = { version = "0.19.0", default-features = false }
 glob = "0.3.1"
-rquickjs = { version = "0.8.1", features = ["full"] }
+
 rquickjs-macro = "0.8.1"
-tokio={workspace = true}
-typed-builder = "0.20.0"
-dino-macros = { workspace = true }
+tokio = { workspace = true }
+dino-server = { workspace = true }
+tracing = "0.1.41"
+tracing-subscriber = { version = "0.3.19", features = ["env-filter"] }

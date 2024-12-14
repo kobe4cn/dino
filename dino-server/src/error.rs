@@ -16,6 +16,8 @@ pub enum AppError {
     RouterMethodNotAllow(Method),
     #[error("Serde json error: {0}")]
     SerderError(#[from] serde_json::Error),
+    #[error("Js error: {0}")]
+    JsError(String),
 }
 
 impl IntoResponse for AppError {
@@ -26,6 +28,7 @@ impl IntoResponse for AppError {
             AppError::RouterPathNotFound(_) => StatusCode::NOT_FOUND,
             AppError::RouterMethodNotAllow(_) => StatusCode::METHOD_NOT_ALLOWED,
             AppError::SerderError(_) => StatusCode::INTERNAL_SERVER_ERROR,
+            AppError::JsError(_) => StatusCode::INTERNAL_SERVER_ERROR,
         };
         (code, self.to_string()).into_response()
     }

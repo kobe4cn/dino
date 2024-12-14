@@ -2,6 +2,7 @@ use std::collections::HashMap;
 
 use anyhow::Result;
 
+use axum::{body::Body, response::Response};
 use dino_macros::{FromJs, IntoJs};
 use rquickjs::{Context, Function, Object, Promise, Runtime};
 use typed_builder::TypedBuilder;
@@ -17,46 +18,41 @@ fn print(msg: String) {
 
 #[derive(Debug, TypedBuilder, IntoJs)]
 pub struct Req {
+    #[builder(default)]
     pub headers: HashMap<String, String>,
-    #[builder(default, setter(strip_option))]
+    #[builder(default)]
     pub body: Option<String>,
     #[builder(setter(into))]
     pub method: String,
     #[builder(setter(into))]
     pub url: String,
+    #[builder(default)]
+    pub query: HashMap<String, String>,
+    #[builder(default)]
+    pub params: HashMap<String, String>,
 }
 
-#[derive(Debug, FromJs)]
+#[derive(Debug, FromJs, serde::Serialize)]
 pub struct Res {
     pub headers: HashMap<String, String>,
     pub body: Option<String>,
     pub status: u16,
 }
 
-// impl<'js> IntoJs<'js> for Request {
-//     fn into_js(self, ctx: &Ctx<'js>) -> rquickjs::Result<rquickjs::Value<'js>> {
-//         let obj = Object::new(ctx.clone())?;
-//         obj.set("headers", self.headers)?;
-//         obj.set("body", self.body)?;
-//         obj.set("method", self.method)?;
-//         obj.set("url", self.url)?;
-//         Ok(obj.into_value())
-//     }
-// }
+impl From<Res> for Response {
+    fn from(res: Res) -> Self {
+        let mut builder = Response::builder().status(res.status);
+        for (k, v) in res.headers {
+            builder = builder.header(k, v);
+        }
 
-// impl<'js> FromJs<'js> for Response {
-//     fn from_js(_ctx: &Ctx<'js>, value: rquickjs::Value<'js>) -> rquickjs::Result<Self> {
-//         let obj = value.into_object().unwrap();
-//         let headers = obj.get::<_, HashMap<String, String>>("headers")?;
-//         let body = obj.get::<_, Option<String>>("body")?;
-//         let status = obj.get::<_, u16>("status")?;
-//         Ok(Self {
-//             headers,
-//             body,
-//             status,
-//         })
-//     }
-// }
+        if let Some(body) = res.body {
+            builder.body(body.into()).unwrap()
+        } else {
+            builder.body(Body::empty()).unwrap()
+        }
+    }
+}
 
 impl JsEngine {
     pub fn new(module: &str) -> Result<Self> {
@@ -116,7 +112,6 @@ mod tests {
         let req = Req::builder()
             .method("GET")
             .url("http://localhost:8080")
-            .headers(HashMap::new())
             .build();
         let ret = engine.run("hello", req)?;
         assert_eq!(ret.status, 200);

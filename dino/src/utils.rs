@@ -46,16 +46,24 @@ pub(crate) fn calc_hash_for_files(dir: &str, ext: &[&str], len: usize) -> Result
 
 pub(crate) fn build_project(dir: &str) -> Result<String> {
     let hash = calc_project_hash(dir)?;
-    let filename = format!("{}/{}.js", BUILD_DIR, hash);
+    let filename = format!("{}/{}.mjs", BUILD_DIR, hash);
+    let config = format!("{}/{}.yml", BUILD_DIR, hash);
+
     let dst = Path::new(&filename);
     if dst.exists() {
         eprint!("Build {} already exists", filename);
         return Ok(filename);
     }
+
     // println!("Building project: {}", filename);
     let content = run_bundle("main.ts", &Default::default())?;
+
     fs::create_dir_all(BUILD_DIR)?;
     fs::write(dst, content)?;
+    let mut dst = File::create(config)?;
+    let mut src = File::open("config.yml")?;
+    std::io::copy(&mut src, &mut dst)?;
+
     Ok(filename)
 }
 

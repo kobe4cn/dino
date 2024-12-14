@@ -23,3 +23,6 @@ serde = { version = "1.0.216", features = ["derive"] }
 indexmap = { version = "2.7.0", features = ["serde"] }
 thiserror = "2.0.6"
 dashmap = "6.1.0"
+dino-macros = { workspace = true }
+rquickjs = { version = "0.8.1", features = ["full"] }
+typed-builder = "0.20.0"

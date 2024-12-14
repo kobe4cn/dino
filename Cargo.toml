@@ -13,3 +13,4 @@ tokio = { version = "1.42.0", features = [
     "io-util",
 ] }
 serde_json = "1.0.133"
+dino-server = { path = "dino-server" }
