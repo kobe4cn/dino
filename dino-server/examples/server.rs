@@ -1,8 +1,13 @@
 use anyhow::Result;
 use dino_server::{ProjectConfig, SwappableAppRouter, TenentRouter};
-
+use tracing::level_filters::LevelFilter;
+use tracing_subscriber::{
+    fmt::Layer, layer::SubscriberExt as _, util::SubscriberInitExt as _, Layer as _,
+};
 #[tokio::main]
 async fn main() -> Result<()> {
+    let layer = Layer::new().pretty().with_filter(LevelFilter::INFO);
+    tracing_subscriber::registry().with(layer).init();
     let config = include_str!("../fixtures/config.yml");
     let config: ProjectConfig = serde_yaml::from_str(config)?;
 

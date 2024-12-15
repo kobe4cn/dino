@@ -26,3 +26,6 @@ dashmap = "6.1.0"
 dino-macros = { workspace = true }
 rquickjs = { version = "0.8.1", features = ["full"] }
 typed-builder = "0.20.0"
+tower = "0.5.2"
+crossbeam-channel = "0.5.13"
+oneshot = "0.1.8"

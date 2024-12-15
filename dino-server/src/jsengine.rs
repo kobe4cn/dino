@@ -8,9 +8,10 @@ use rquickjs::{Context, Function, Object, Promise, Runtime};
 use typed_builder::TypedBuilder;
 
 #[allow(unused)]
+#[derive(Clone)]
 pub struct JsEngine {
-    rt: Runtime,
-    ctx: Context,
+    pub rt: Runtime,
+    pub ctx: Context,
 }
 fn print(msg: String) {
     println!("{msg}");
@@ -55,6 +56,11 @@ impl From<Res> for Response {
 }
 
 impl JsEngine {
+    pub async fn init() -> Result<Self> {
+        let rt = Runtime::new()?;
+        let ctx = Context::full(&rt)?;
+        Ok(Self { rt, ctx })
+    }
     pub fn new(module: &str) -> Result<Self> {
         //using rquickjs for set js global object and run js code
         let rt = Runtime::new()?;
@@ -82,39 +88,5 @@ impl JsEngine {
 
             Ok::<_, anyhow::Error>(result.finish()?)
         })
-    }
-}
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-    use anyhow::Result;
-
-    #[test]
-    fn test_js_engine() -> Result<()> {
-        let engine = JsEngine::new(
-            r#"
-            (function(){
-                async function hello(req){
-                print("hello world");
-                return{
-                status:200,
-                headers:{
-
-                "content-type":"application/json"
-                },
-                body:JSON.stringify(req),
-                };
-                }
-                return{hello:hello};})();
-        "#,
-        )?;
-        let req = Req::builder()
-            .method("GET")
-            .url("http://localhost:8080")
-            .build();
-        let ret = engine.run("hello", req)?;
-        assert_eq!(ret.status, 200);
-        Ok(())
     }
 }

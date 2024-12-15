@@ -1,11 +1,13 @@
 mod config;
 mod error;
 mod jsengine;
+mod middleware;
 mod router;
 use dashmap::DashMap;
 pub use error::*;
 pub use jsengine::*;
 use matchit::Match;
+pub use middleware::ServiceTimeLayer;
 use std::collections::HashMap;
 use tracing::info;
 
@@ -49,6 +51,7 @@ pub async fn start_server(port: u16, router: Vec<TenentRouter>) -> Result<()> {
 
     let app = Router::new()
         .route("/*path", any(handler))
+        .layer(ServiceTimeLayer)
         .with_state(AppState::new(map_router));
     axum::serve(listener, app.into_make_service()).await?;
 
